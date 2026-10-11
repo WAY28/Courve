@@ -1,0 +1,138 @@
+// Database provider: SQLite for local development in this environment
+// (no PostgreSQL/Docker installed here). For production, per the project
+// planning doc, switch provider to "postgresql" and point DATABASE_URL to a
+// managed Postgres instance (e.g. Railway, Supabase, Neon) — the schema
+// below avoids SQLite-only features so this migration is a one-line change.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("USER") // "USER" | "ADMIN"
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  orders   Order[]
+  reviews  Review[]
+  wishlist WishlistItem[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  description String
+  price       Int
+  oldPrice    Int?
+  category    String
+  material    String
+  colorway    String
+  imagesJson  String // JSON-encoded string[] e.g. ["/images/products/x.jpg"]
+  published   Boolean  @default(true)
+  rating      Float    @default(0)
+  reviews     Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sizes      ProductSize[]
+  orderItems OrderItem[]
+  reviewRows Review[]
+  wishedBy   WishlistItem[]
+}
+
+// One row per product size; stock is decremented atomically at checkout.
+model ProductSize {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      String
+  stock     Int     @default(0)
+
+  @@unique([productId, size])
+}
+
+// Product photos uploaded by admins are stored here so they survive on hosts
+// with an ephemeral filesystem.
+model Upload {
+  id        String   @id @default(cuid())
+  mime      String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  orderNumber   String   @unique
+  customerName  String
+  phone         String
+  address       String
+  city          String
+  postalCode    String
+  paymentMethod String
+  subtotal      Int
+  shipping      Int
+  total         Int
+  status        String   @default("PENDING") // PENDING | PAID | SHIPPED | COMPLETED | CANCELLED
+  createdAt     DateTime @default(now())
+  userId        Int?
+  user          User?    @relation(fields: [userId], references: [id])
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id          Int    @id @default(autoincrement())
+  orderId     Int
+  order       Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   Int?
+  product     Product? @relation(fields: [productId], references: [id])
+  productName String
+  price       Int
+  size        String
+  qty         Int
+}
+
+// One review per customer per product; only customers with a completed order
+// containing the product may write one. Admins can hide or delete reviews.
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId])
+}
+
+model WishlistItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// Shop-wide settings editable from the admin panel (e.g. the WhatsApp number).
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,27 @@
+# Render Blueprint: backend API (Express + Prisma). Database = Neon (PostgreSQL), dibuat terpisah.
+# Panduan lengkap: DEPLOY.md
+services:
+  - type: web
+    name: courve-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm install --include=dev && npm run build:prod
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL # connection string Neon (direct, bukan pooled)
+        sync: false
+      - key: FRONTEND_URL # alamat web di Vercel, tanpa garis miring di akhir
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TRUST_PROXY
+        value: 1
+      - key: ADMIN_EMAIL # admin pertama (dipakai hanya bila belum ada admin)
+        sync: false
+      - key: ADMIN_PASSWORD # min 12 karakter; hapus setelah login pertama
+        sync: false

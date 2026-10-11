@@ -44,7 +44,7 @@ export default function Header() {
     <>
       <div className="bg-foreground px-4 py-2 text-center text-xs text-white/90">
         Ongkir flat Rp 15.000
-        <span className="hidden sm:inline"> &middot; Bayar lewat Transfer Bank, COD, atau E-Wallet</span>
+        <span className="hidden sm:inline"> &middot; Bayar lewat Transfer Bank / QRIS atau COD</span>
       </div>
 
       <header className="sticky top-0 z-40 border-b border-border bg-surface/90 backdrop-blur-md">

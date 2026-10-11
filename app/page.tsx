@@ -66,7 +66,7 @@ export default async function HomePage() {
             )}
             <div>
               <dt className="text-xs text-muted">Metode bayar</dt>
-              <dd className="font-display text-xl font-semibold">3 pilihan</dd>
+              <dd className="font-display text-xl font-semibold">2 pilihan</dd>
             </div>
             {minPrice && (
               <div>

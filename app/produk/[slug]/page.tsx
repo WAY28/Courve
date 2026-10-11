@@ -60,7 +60,7 @@ export default async function ProductDetailPage({
   const perks = [
     { icon: LeafIcon, text: product.material },
     { icon: TruckIcon, text: "Ongkir flat Rp 15.000" },
-    { icon: CardIcon, text: "Transfer, COD, E-Wallet" },
+    { icon: CardIcon, text: "Transfer / QRIS, COD" },
   ];
 
   return (
